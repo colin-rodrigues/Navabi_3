@@ -1,0 +1,123 @@
+---
+title: "Navabi_markdown2"
+author: "crodrigu"
+date: "August 2, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library('ggplot2')
+library('forecast')
+library('tseries')
+library("TTR")
+library(data.table)
+library(dplyr)
+
+##Below code inputs data from Cohort data csv file and stores it in table cus_data
+traffic_data<-read.csv("data/ga_case_study_data.csv")
+#traffic_data<-head(traffic_data, n=400)
+sales_data<-read.csv("data/grossPerDay.csv")
+#sales_data<-head(sales_data, n=200)
+
+```
+
+## R Markdown
+
+
+
+```{r, echo=FALSE}
+
+traffic_data$date<-traffic_data$end_date
+sales_data$date<-sales_data$orderDate
+
+merge_table<-merge(cbind(sales_data, X=sales_data$date), cbind(traffic_data, variable=traffic_data$date), allow.cartesian = FALSE)
+
+test<-filter(merge_table, merge_table$orderDate=='2013-07-01'&merge_table$ga.medium=="affiliate")
+
+Affiliate_revenue<-(sum((filter(merge_table, merge_table$ga.channelGrouping=='Affiliates'&merge_table$ï..CustomerType=='Returning Customer Order'))$ga.transactionRevenue))
+Affiliate_Sessions<-(sum((filter(merge_table, merge_table$ga.channelGrouping=='Affiliates'&merge_table$ï..CustomerType=='Returning Customer Order'))$ga.sessions))
+Affiliate_newusers<-(sum((filter(merge_table, merge_table$ga.channelGrouping=='Affiliates'&merge_table$ï..CustomerType=='Returning Customer Order'))$ga.newUsers))
+Affiliate_transactions<-(sum((filter(merge_table, merge_table$ga.channelGrouping=='Affiliates'&merge_table$ï..CustomerType=='Returning Customer Order'))$ga.transactions))
+
+Direct_revenue<-(sum((filter(merge_table, merge_table$ga.channelGrouping=='Direct'&merge_table$ï..CustomerType=='Returning Customer Order'))$ga.transactionRevenue))
+Direct_Sessions<-(sum((filter(merge_table, merge_table$ga.channelGrouping=='Direct'&merge_table$ï..CustomerType=='Returning Customer Order'))$ga.sessions))
+Direct_newusers<-(sum((filter(merge_table, merge_table$ga.channelGrouping=='Direct'&merge_table$ï..CustomerType=='Returning Customer Order'))$ga.newUsers))
+Direct_transactions<-(sum((filter(merge_table, merge_table$ga.channelGrouping=='Direct'&merge_table$ï..CustomerType=='Returning Customer Order'))$ga.transactions))
+
+Display_revenue<-(sum((filter(merge_table, merge_table$ga.channelGrouping=='Display'&merge_table$ï..CustomerType=='Returning Customer Order'))$ga.transactionRevenue))
+Display_Sessions<-(sum((filter(merge_table, merge_table$ga.channelGrouping=='Display'&merge_table$ï..CustomerType=='Returning Customer Order'))$ga.sessions))
+Display_newusers<-(sum((filter(merge_table, merge_table$ga.channelGrouping=='Display'&merge_table$ï..CustomerType=='Returning Customer Order'))$ga.newUsers))
+Display_transactions<-(sum((filter(merge_table, merge_table$ga.channelGrouping=='Display'&merge_table$ï..CustomerType=='Returning Customer Order'))$ga.transactions))
+
+Email_revenue<-(sum((filter(merge_table, merge_table$ga.channelGrouping=='Email'&merge_table$ï..CustomerType=='Returning Customer Order'))$ga.transactionRevenue))
+Email_Sessions<-(sum((filter(merge_table, merge_table$ga.channelGrouping=='Email'&merge_table$ï..CustomerType=='Returning Customer Order'))$ga.sessions))
+Email_newusers<-(sum((filter(merge_table, merge_table$ga.channelGrouping=='Email'&merge_table$ï..CustomerType=='Returning Customer Order'))$ga.newUsers))
+Email_transactions<-(sum((filter(merge_table, merge_table$ga.channelGrouping=='Email'&merge_table$ï..CustomerType=='Returning Customer Order'))$ga.transactions))
+
+Organic_revenue<-(sum((filter(merge_table, merge_table$ga.channelGrouping=='Organic Search'&merge_table$ï..CustomerType=='Returning Customer Order'))$ga.transactionRevenue))
+Organic_Sessions<-(sum((filter(merge_table, merge_table$ga.channelGrouping=='Organic Search'&merge_table$ï..CustomerType=='Returning Customer Order'))$ga.sessions))
+Organic_newusers<-(sum((filter(merge_table, merge_table$ga.channelGrouping=='Organic Search'&merge_table$ï..CustomerType=='Returning Customer Order'))$ga.newUsers))
+Organic_transactions<-(sum((filter(merge_table, merge_table$ga.channelGrouping=='Organic Search'&merge_table$ï..CustomerType=='Returning Customer Order'))$ga.transactions))
+
+Paid_revenue<-(sum((filter(merge_table, merge_table$ga.channelGrouping=='Paid Search'&merge_table$ï..CustomerType=='Returning Customer Order'))$ga.transactionRevenue))
+Paid_Sessions<-(sum((filter(merge_table, merge_table$ga.channelGrouping=='Paid Search'&merge_table$ï..CustomerType=='Returning Customer Order'))$ga.sessions))
+Paid_newusers<-(sum((filter(merge_table, merge_table$ga.channelGrouping=='Paid Search'&merge_table$ï..CustomerType=='Returning Customer Order'))$ga.newUsers))
+Paid_transactions<-(sum((filter(merge_table, merge_table$ga.channelGrouping=='Paid Search'&merge_table$ï..CustomerType=='Returning Customer Order'))$ga.transactions))
+
+Referral_revenue<-(sum((filter(merge_table, merge_table$ga.channelGrouping=='Referral'&merge_table$ï..CustomerType=='Returning Customer Order'))$ga.transactionRevenue))
+Referral_Sessions<-(sum((filter(merge_table, merge_table$ga.channelGrouping=='Referral'&merge_table$ï..CustomerType=='Returning Customer Order'))$ga.sessions))
+Referral_newusers<-(sum((filter(merge_table, merge_table$ga.channelGrouping=='Referral'&merge_table$ï..CustomerType=='Returning Customer Order'))$ga.newUsers))
+Referral_transactions<-(sum((filter(merge_table, merge_table$ga.channelGrouping=='Referral'&merge_table$ï..CustomerType=='Returning Customer Order'))$ga.transactions))
+
+Social_revenue<-(sum((filter(merge_table, merge_table$ga.channelGrouping=='Social'&merge_table$ï..CustomerType=='Returning Customer Order'))$ga.transactionRevenue))
+Social_Sessions<-(sum((filter(merge_table, merge_table$ga.channelGrouping=='Social'&merge_table$ï..CustomerType=='Returning Customer Order'))$ga.sessions))
+Social_newusers<-(sum((filter(merge_table, merge_table$ga.channelGrouping=='Social'&merge_table$ï..CustomerType=='Returning Customer Order'))$ga.newUsers))
+Social_transactions<-(sum((filter(merge_table, merge_table$ga.channelGrouping=='Social'&merge_table$ï..CustomerType=='Returning Customer Order'))$ga.transactions))
+
+
+
+
+```
+   
+      
+      
+```{r}
+
+#outputs to csv file
+Affiliate_Sessions_per_transaction = Affiliate_Sessions/Affiliate_transactions
+Affiliate_revenue_per_user = Affiliate_revenue/Affiliate_newusers
+Affiliate<-c(Affiliate_newusers,Affiliate_revenue,Affiliate_Sessions,Affiliate_transactions,Affiliate_revenue_per_user,Affiliate_Sessions_per_transaction)
+
+Direct_Sessions_per_transaction = Direct_Sessions/Direct_transactions
+Direct_revenue_per_user = Direct_revenue/Direct_newusers
+Direct<-c(Direct_newusers,Direct_revenue,Direct_Sessions,Direct_transactions,Direct_revenue_per_user,Direct_Sessions_per_transaction)
+
+Email_Sessions_per_transaction = Email_Sessions/Email_transactions
+Email_revenue_per_user = Email_revenue/Email_newusers
+Email<-c(Email_newusers,Email_revenue,Email_Sessions,Email_transactions,Email_revenue_per_user,Email_Sessions_per_transaction)
+
+Organic_Sessions_per_transaction = Organic_Sessions/Organic_transactions
+Organic_revenue_per_user = Organic_revenue/Organic_newusers
+Organic<-c(Organic_newusers,Organic_revenue,Organic_Sessions,Organic_transactions,Organic_revenue_per_user,Organic_Sessions_per_transaction)
+
+Paid_Sessions_per_transaction = Paid_Sessions/Paid_transactions
+Paid_revenue_per_user = Paid_revenue/Paid_newusers
+Paid<-c(Paid_newusers,Paid_revenue,Paid_Sessions,Paid_transactions,Paid_revenue_per_user,Paid_Sessions_per_transaction)
+
+Referral_Sessions_per_transaction = Referral_Sessions/Referral_transactions
+Referral_revenue_per_user = Referral_revenue/Referral_newusers
+Referral<-c(Referral_newusers,Referral_revenue,Referral_Sessions,Referral_transactions,Referral_revenue_per_user,Referral_Sessions_per_transaction)
+
+Social_Sessions_per_transaction = Social_Sessions/Social_transactions
+Social_revenue_per_user = Social_revenue/Social_newusers
+Social<-c(Social_newusers,Social_revenue,Social_Sessions,Social_transactions,Social_revenue_per_user,Social_Sessions_per_transaction)
+
+df=data.frame(Affiliate,Direct,Email,Organic,Paid,Referral,Social)
+write.csv(df,file = "trafficmetrics.csv")
+
+
+
+```
+
+      

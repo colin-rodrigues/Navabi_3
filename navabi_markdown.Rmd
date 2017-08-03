@@ -1,0 +1,165 @@
+---
+title: "Navabi_markdown"
+author: "crodrigu"
+date: "August 1, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library('ggplot2')
+library('forecast')
+library('tseries')
+library("TTR")
+##Below code inputs data from Cohort data csv file and stores it in table cus_data
+cus_data<-read.csv("data/Cohort data Y345_csv.csv")
+
+```
+
+## R Markdown
+
+
+
+```{r, echo=FALSE}
+# #Below code iterates through data entries in cus_data
+forecastTotal <- 0
+
+  for(i in 0:max(cus_data[5])) 
+    { 
+      nam <- paste("CohortAge", "_", i, sep = "")
+      assign(nam, cus_data[which(cus_data$CohortAge==i),]) #stores each cohort in a unique list based on its age
+      namtimeseries <- ts((get(nam)[11]), frequency = 12, end = c(5,12))    #creates a time series for gross sales of current cohort
+      print(namtimeseries)
+      #plot.ts(namtimeseries, main=paste("Cohort Age ",i))
+      fit<-auto.arima(namtimeseries) #Uses arima prediction to forecast the sales for each cohort over next 12 months
+      #print(fit)
+      salesforecast<-forecast(fit,h=12)
+      print(salesforecast)
+      plot(salesforecast,main=paste("Cohort Age ",i, "Forecast"), ylim=c(0,70000))
+      #namforecast <- paste("CohortAgeForecast", "_", i, sep = "")
+      #assign(namforecast, salesforecast$mean) #stores each cohort in a unique list
+      forecastTotal <- forecastTotal + salesforecast$mean #stores predicted sales in variable
+  }
+
+print(forecastTotal)    
+plot.ts(forecastTotal,main=paste("Gross Sales Forecast for next 12 months"))
+
+
+
+```
+      
+      
+      
+      
+      
+      
+      
+```{r echo=FALSE}
+#predicts number of customers
+      namtimeseriesnumcust <- ts(CohortAge_0$Number.of.Customers, frequency = 12, end = c(5,12))    
+      print(namtimeseriesnumcust)
+      fitnumcust<-auto.arima(namtimeseriesnumcust) 
+      forecastnumcust<-forecast(fitnumcust,h=12)
+      print(forecastnumcust)
+      plot(forecastnumcust,main=paste("Number of customers Forecast"), ylim=c(0,500))
+```
+```{r echo=FALSE}
+#predicts number of orders
+forecastTotalorder <- 0
+
+  for(i in 0:max(cus_data[5])) 
+    { 
+      nam <- paste("CohortAge", "_", i, sep = "")
+      namtimeseriesnumord <- ts((get(nam)[7]), frequency = 12, end = c(5,12))    #creates a time series for gross sales of current cohort
+      print(namtimeseriesnumord)
+      fitnumord<-auto.arima(namtimeseriesnumord) #Uses arima prediction to forecast the sales for each cohort over next 12 months
+      forecastnumord<-forecast(fitnumord,h=12)
+      print(forecastnumord)
+      plot(forecastnumord,main=paste("Number of orders Forecast"), ylim=c(0,500))
+      #namforecast <- paste("CohortAgeForecast", "_", i, sep = "")
+      #assign(namforecast, salesforecast$mean) #stores each cohort in a unique list
+      forecastTotalorder <- forecastTotalorder + forecastnumord$mean #stores predicted sales in variable
+  }
+
+print(forecastTotalorder)    
+plot.ts(forecastTotalorder,main=paste("Order Forecast for next 12 months"))
+
+```
+
+```{r}
+#predicts number of items ordered
+forecastTotalitemorder <- 0
+
+  for(i in 0:max(cus_data[5])) 
+    { 
+      nam <- paste("CohortAge", "_", i, sep = "")
+      namtimeseriesnumitemord <- ts((get(nam)[9]), frequency = 12, end = c(5,12))    #creates a time series for gross sales of current cohort
+      print(namtimeseriesnumitemord)
+      fitnumitemord<-auto.arima(namtimeseriesnumitemord) #Uses arima prediction to forecast the sales for each cohort over next 12 months
+      forecastnumitemord<-forecast(fitnumitemord,h=12)
+      print(forecastnumitemord)
+      plot(forecastnumitemord,main=paste("Number of items ordered Forecast"), ylim=c(0,1000))
+      forecastTotalitemorder <- forecastTotalitemorder + forecastnumitemord$mean #stores predicted sales in variable
+  }
+
+print(forecastTotalitemorder)    
+plot.ts(forecastTotalitemorder,main=paste("Order items Forecast for next 12 months"))
+```
+
+
+
+
+
+
+
+```{r}
+
+#predicts number of returns
+forecastTotalreturn <- 0
+
+  for(i in 0:max(cus_data[5])) 
+    { 
+      nam <- paste("CohortAge", "_", i, sep = "")
+      namtimeseriesnumret <- ts((get(nam)[10]), frequency = 12, end = c(5,12))    #creates a time series for gross sales of current cohort
+      print(namtimeseriesnumret)
+      fitnumret<-auto.arima(namtimeseriesnumret) #Uses arima prediction to forecast the sales for each cohort over next 12 months
+      forecastnumret<-forecast(fitnumret,h=12)
+      print(forecastnumret)
+      plot(forecastnumret,main=paste("Number of item returns Forecast"), ylim=c(0,500))
+      forecastTotalreturn <- forecastTotalreturn + forecastnumret$mean #stores predicted sales in variable
+  }
+
+print(forecastTotalreturn)    
+plot.ts(forecastTotalreturn,main=paste("Item Return Forecast for next 12 months"))
+
+
+
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+#outputs to csv file
+Average_Item_Value = forecastTotal/forecastTotalitemorder
+Total_Return_Value = Average_Item_Value*forecastTotalreturn
+Return_Rate = Total_Return_Value/forecastTotal
+df=data.frame(forecastTotal,forecastTotalorder,forecastnumcust$mean,forecastTotalreturn,forecastTotalitemorder,Average_Item_Value,Total_Return_Value,Return_Rate)
+write.csv(df,file = "Salesforecast.csv",row.names = TRUE)
+
+```
+
+
+
